@@ -20,7 +20,7 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS clubs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT UNIQUE NOT NULL,
-    description TEXT NOT NULL,
+    description TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   )
 `);
@@ -30,7 +30,7 @@ db.exec(`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     club_id INTEGER NOT NULL,
     title TEXT NOT NULL,
-    description TEXT NOT NULL,
+    description TEXT,
     scheduled_date DATETIME NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (club_id) REFERENCES clubs (id) ON DELETE CASCADE
@@ -116,10 +116,9 @@ app.post('/clubs', [
     .withMessage('Club name must be between 1 and 100 characters')
     .trim(),
   body('description')
-    .notEmpty()
-    .withMessage('Club description is required')
-    .isLength({ min: 1, max: 500 })
-    .withMessage('Club description must be between 1 and 500 characters')
+    .optional()
+    .isLength({ max: 500 })
+    .withMessage('Club description must be 500 characters or less')
     .trim()
 ], handleValidationErrors, (req, res) => {
   try {
@@ -161,10 +160,9 @@ app.post('/clubs/:id/events', [
     .withMessage('Event title must be between 1 and 100 characters')
     .trim(),
   body('description')
-    .notEmpty()
-    .withMessage('Event description is required')
-    .isLength({ min: 1, max: 500 })
-    .withMessage('Event description must be between 1 and 500 characters')
+    .optional()
+    .isLength({ max: 500 })
+    .withMessage('Event description must be 500 characters or less')
     .trim(),
   body('scheduled_date')
     .isISO8601()
