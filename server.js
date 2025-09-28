@@ -28,6 +28,7 @@ if (!fs.existsSync(dbDir)) {
   fs.mkdirSync(dbDir);
 }
 const db = new Database(config.databasePath);
+db.pragma('foreign_keys = ON');
 
 // Create tables if they don't exist
 db.exec(`
@@ -103,7 +104,7 @@ const statements = {
 
 // GET /clubs - Get all clubs or search clubs
 app.get('/clubs', [
-  query('search').optional().isLength({ min: 1 }).trim()
+  query('search').optional().trim().isLength({ min: 1 })
 ], handleValidationErrors, (req, res) => {
   try {
     let clubs;
@@ -133,16 +134,16 @@ app.get('/clubs', [
 // POST /clubs - Create a new club
 app.post('/clubs', [
   body('name')
+    .trim()
     .notEmpty()
     .withMessage('Club name is required')
     .isLength({ min: 1, max: 100 })
-    .withMessage('Club name must be between 1 and 100 characters')
-    .trim(),
+    .withMessage('Club name must be between 1 and 100 characters'),
   body('description')
     .optional()
+    .trim()
     .isLength({ max: 500 })
     .withMessage('Club description must be 500 characters or less')
-    .trim()
 ], handleValidationErrors, (req, res) => {
   try {
     const { name, description } = req.body;
@@ -179,17 +180,18 @@ app.post('/clubs', [
 app.post('/clubs/:id/events', [
   param('id').isInt({ min: 1 }).withMessage('Invalid club ID'),
   body('title')
+    .trim()
     .notEmpty()
     .withMessage('Event title is required')
     .isLength({ min: 1, max: 100 })
-    .withMessage('Event title must be between 1 and 100 characters')
-    .trim(),
+    .withMessage('Event title must be between 1 and 100 characters'),
   body('description')
     .optional()
+    .trim()
     .isLength({ max: 500 })
-    .withMessage('Event description must be 500 characters or less')
-    .trim(),
+    .withMessage('Event description must be 500 characters or less'),
   body('scheduled_date')
+    .trim()
     .isISO8601()
     .withMessage('Invalid date format. Use ISO 8601 format (YYYY-MM-DDTHH:mm:ss)')
     .custom((value) => {
