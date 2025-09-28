@@ -159,6 +159,34 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+function parseErrorMessage(errorMessage) {
+    // Parse common backend error formats
+    if (errorMessage.includes('UNIQUE constraint failed')) {
+        return 'A club with this name already exists';
+    }
+    if (errorMessage.includes('validation')) {
+        return errorMessage.replace('Error: ', '');
+    }
+    return errorMessage;
+}
+
+function setButtonLoading(button, loading = true) {
+    if (loading) {
+        button.dataset.originalText = button.textContent;
+        button.disabled = true;
+        button.innerHTML = `
+            <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            ${button.dataset.originalText === 'Create Club' ? 'Creating...' : 'Scheduling...'}
+        `;
+    } else {
+        button.disabled = false;
+        button.textContent = button.dataset.originalText || button.textContent;
+    }
+}
+
 async function toggleEvents(clubId) {
     const eventsContainer = document.getElementById(`events-${clubId}`);
     const toggleText = document.getElementById(`toggle-text-${clubId}`);
@@ -276,40 +304,70 @@ elements.searchInput.addEventListener('input', (e) => {
 // Form submissions
 elements.clubForm.addEventListener('submit', async (e) => {
     e.preventDefault();
+    const submitBtn = e.target.querySelector('button[type="submit"]');
     const formData = new FormData(e.target);
     const clubData = Object.fromEntries(formData.entries());
     
+    // Client-side validation
+    if (!clubData.name?.trim() || clubData.name.trim().length < 2) {
+        showToast('Club name must be at least 2 characters long', 'error');
+        return;
+    }
+    
     try {
+        setButtonLoading(submitBtn, true);
         await createClub(clubData);
         showToast('Club created successfully!');
         closeClubModal();
+        e.target.reset();
         
         // Reload clubs
         showLoading();
         const response = await loadClubs();
         renderClubs(response.data);
     } catch (error) {
-        showToast('Failed to create club: ' + error.message, 'error');
+        const errorMessage = parseErrorMessage(error.message);
+        showToast('Failed to create club: ' + errorMessage, 'error');
+    } finally {
+        setButtonLoading(submitBtn, false);
     }
 });
 
 elements.eventForm.addEventListener('submit', async (e) => {
     e.preventDefault();
+    const submitBtn = e.target.querySelector('button[type="submit"]');
     const formData = new FormData(e.target);
     const eventData = Object.fromEntries(formData.entries());
     const clubId = document.getElementById('eventClubId').value;
     
+    // Client-side validation
+    if (!eventData.title?.trim() || eventData.title.trim().length < 2) {
+        showToast('Event title must be at least 2 characters long', 'error');
+        return;
+    }
+    
+    const eventDate = new Date(eventData.scheduled_date);
+    if (eventDate <= new Date()) {
+        showToast('Event date must be in the future', 'error');
+        return;
+    }
+    
     try {
+        setButtonLoading(submitBtn, true);
         await createEvent(clubId, eventData);
         showToast('Event scheduled successfully!');
         closeEventModal();
+        e.target.reset();
         
         // Refresh events for this club if they're currently displayed
         if (currentEvents[clubId] !== undefined) {
             await loadAndDisplayEvents(clubId);
         }
     } catch (error) {
-        showToast('Failed to schedule event: ' + error.message, 'error');
+        const errorMessage = parseErrorMessage(error.message);
+        showToast('Failed to schedule event: ' + errorMessage, 'error');
+    } finally {
+        setButtonLoading(submitBtn, false);
     }
 });
 
