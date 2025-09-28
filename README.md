@@ -1,129 +1,197 @@
 # Club & Event Management System
 
-A RESTful API for managing game clubs and scheduling events. Built with Express.js and SQLite.
+A RESTful API for managing game clubs and scheduling events. Built with Express.js, SQLite, and Tailwind CSS.
 
 ## Features
 
-- Create and search game clubs with unique names and descriptions
-- Schedule events for specific clubs with date/time validation
+- Create and search game clubs with unique names
+- Schedule events for clubs with date/time validation  
+- Clean, responsive web interface
 - Input validation and error handling
 - SQLite database with proper relationships
-- Docker support
+- Docker support for easy deployment
 
-## Getting Started
+## Quick Start
 
-### Prerequisites
+### Option 1: Using Docker (Recommended)
 
-- Node.js 22.20.0+ (LTS)
-- npm
-
-### Installation
+**Prerequisites:** Docker and Docker Compose
 
 ```bash
+# Clone the repository
+git clone <repository-url>
+cd club-and-event-management
+
+# Start the application
+docker compose up --build
+
+# Or run in background
+docker compose up --build -d
+```
+
+The application will be available at `http://localhost:3000`
+
+To stop:
+```bash
+docker compose down
+```
+
+### Option 2: Using Node.js Directly
+
+**Prerequisites:** Node.js 22.20.0+ (LTS)
+
+```bash
+# Clone the repository
+git clone <repository-url>
+cd club-and-event-management
+
 # Install dependencies
 npm install
 
-# Start the server
+# Start the application
+npm start
+
+# For development with auto-reload
+npm run dev
+```
+
+The application will be available at `http://localhost:3000`
+
+**Important:** Choose either Docker OR Node.js for development. If you run Docker first, it creates database files that may require root access to modify. To switch from Docker to local development:
+
+```bash
+# Stop Docker and remove the database
+docker compose down
+sudo rm -rf data/
+# Then run with Node.js
 npm start
 ```
 
-The server will run on `http://localhost:3000`.
+## Usage
 
-### Docker
-
-```bash
-# Build and run with Docker Compose
-docker-compose up --build
-```
-
-The database will be persisted in the `./data/` directory.
+1. **Web Interface**: Open `http://localhost:3000` in your browser
+2. **Create Clubs**: Click "New Club" to create clubs
+3. **Schedule Events**: Click "Schedule Event" on any club card
+4. **Search**: Use the search bar to find clubs by name or description
+5. **View Events**: Click "Show Events" to see scheduled events for a club
 
 ## API Endpoints
 
 ### Clubs
-
-- `GET /clubs` - Get all clubs (supports `?search=term` query parameter)
+- `GET /clubs` - Get all clubs (supports `?search=term`)
 - `POST /clubs` - Create a new club
 
-**Create Club Request:**
-```json
-{
-  "name": "Chess Masters",
-  "description": "Strategic chess games and tournaments"
-}
+**Example: Create Club**
+```bash
+curl -X POST http://localhost:3000/clubs \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Chess Club","description":"Strategic games"}'
 ```
 
-### Events
+### Events  
+- `GET /clubs/:id/events` - Get events for a club
+- `POST /clubs/:id/events` - Create an event
 
-- `GET /clubs/:id/events` - Get all events for a specific club
-- `POST /clubs/:id/events` - Create an event for a club
-
-**Create Event Request:**
-```json
-{
-  "title": "Weekly Tournament",
-  "description": "Join us for our weekly tournament",
-  "scheduled_date": "2024-12-31T18:00:00.000Z"
-}
+**Example: Create Event**
+```bash
+curl -X POST http://localhost:3000/clubs/1/events \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Tournament","scheduled_date":"2024-12-31T18:00:00.000Z"}'
 ```
 
-### Utility
+### Health Check
+- `GET /health` - Server health status
 
-- `GET /health` - Health check endpoint
+## Data Storage
 
-## Database Schema
+- **Local Development**: Database stored in `data/club_management.db`
+- **Docker**: Database persisted in `./data/` directory (automatically created)
+- **Database Schema**: SQLite with clubs and events tables
 
-### Clubs Table
+## Field Requirements
+
+**Required Fields (marked with *):**
+- Club Name*
+- Event Title*  
+- Event Date & Time*
+
+**Optional Fields:**
+- Club Description (helpful placeholder provided)
+- Event Description (helpful placeholder provided)
+
+## Development
+
+### Project Structure
+```
+├── server.js              # Express.js API server
+├── public/                 # Frontend files
+│   ├── index.html         # Web interface  
+│   └── app.js             # Frontend JavaScript
+├── data/                   # SQLite database directory
+├── package.json           # Node.js dependencies
+├── Dockerfile             # Docker configuration
+└── docker-compose.yml     # Docker Compose setup
+```
+
+### Database Schema
+
+**Clubs Table:**
 ```sql
 CREATE TABLE clubs (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT UNIQUE NOT NULL,
-  description TEXT NOT NULL,
+  description TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 ```
 
-### Events Table
+**Events Table:**
 ```sql
 CREATE TABLE events (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   club_id INTEGER NOT NULL,
   title TEXT NOT NULL,
-  description TEXT NOT NULL,
+  description TEXT,
   scheduled_date DATETIME NOT NULL,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (club_id) REFERENCES clubs (id) ON DELETE CASCADE
 );
 ```
 
-## Validation Rules
+## Troubleshooting
 
-- Club names: 1-100 characters, must be unique
-- Club descriptions: 1-500 characters
-- Event titles: 1-100 characters
-- Event descriptions: 1-500 characters
-- Event dates: Must be in the future, ISO 8601 format
+### Common Issues
 
-## Development
-
+**Port 3000 already in use:**
 ```bash
-# Start development server with auto-reload
-npm run dev
+# Find and kill the process
+lsof -ti:3000 | xargs kill -9
+
+# Or use a different port
+PORT=3001 npm start
 ```
 
-Both local development and Docker use the same database location (`data/club_management.db`).
-
-## Project Structure
-
+**Docker permission issues:**
+```bash
+# Stop containers and rebuild
+docker compose down
+docker compose up --build
 ```
-├── server.js              # Main Express application
-├── public/                 # Static files (basic frontend placeholder)
-├── data/                   # Database directory
-│   └── club_management.db # SQLite database (auto-created)
-├── package.json           # Dependencies and scripts
-├── Dockerfile             # Docker configuration
-└── docker-compose.yml     # Docker Compose setup
+
+**Database issues:**
+```bash
+# Remove database to start fresh
+rm -f data/club_management.db
+# Then restart the application
 ```
+
+### System Requirements
+
+- **Node.js**: Version 22.20.0 or higher (LTS recommended)
+- **Docker**: Version 20.0+ with Docker Compose
+- **Browser**: Any modern browser (Chrome, Firefox, Safari, Edge)
+- **Memory**: Minimum 512MB available RAM
+- **Storage**: ~50MB for application and dependencies
 
 ## License
 

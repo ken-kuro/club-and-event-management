@@ -11,6 +11,3 @@ services:
       # Persist SQLite database
       - ./data:/app/data
     restart: unless-stopped
-
-
-

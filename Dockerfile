@@ -13,7 +13,7 @@ RUN npm ci --only=production
 # Copy application code
 COPY . .
 
-# Create directory for SQLite database
+# Create data directory
 RUN mkdir -p data
 
 # Expose port
@@ -23,7 +23,5 @@ EXPOSE 3000
 ENV NODE_ENV=production
 ENV PORT=3000
 
-
 # Start the application
 CMD ["npm", "start"]
-
