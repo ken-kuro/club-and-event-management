@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Club & Event Management</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 1rem;
+        }
+        .api-info {
+            background-color: #f8f9fa;
+            padding: 1rem;
+            border-radius: 4px;
+            margin: 1rem 0;
+        }
+        code {
+            background-color: #e9ecef;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: 'Monaco', 'Consolas', monospace;
+        }
+        .endpoint {
+            margin: 0.5rem 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Club & Event Management API</h1>
+        <p>Backend API server is running successfully.</p>
+        
+        <div class="api-info">
+            <h3>Available Endpoints</h3>
+            <div class="endpoint"><strong>GET</strong> <code>/clubs</code> - Get all clubs</div>
+            <div class="endpoint"><strong>POST</strong> <code>/clubs</code> - Create a new club</div>
+            <div class="endpoint"><strong>GET</strong> <code>/clubs/:id/events</code> - Get events for a club</div>
+            <div class="endpoint"><strong>POST</strong> <code>/clubs/:id/events</code> - Create an event</div>
+            <div class="endpoint"><strong>GET</strong> <code>/health</code> - Health check</div>
+        </div>
+        
+        <p><em>TODO: Implement a real FE</em></p>
+    </div>
+</body>
+</html>
