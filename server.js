@@ -1,3 +1,6 @@
+// Load environment variables
+require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
@@ -6,14 +9,25 @@ const Database = require('better-sqlite3');
 const { body, param, query, validationResult } = require('express-validator');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+
+// Environment configuration
+const config = {
+  port: process.env.PORT || 3000,
+  nodeEnv: process.env.NODE_ENV || 'development',
+  databasePath: process.env.DATABASE_PATH || 'data/club_management.db',
+  rateLimit: {
+    windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000,
+    max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100
+  }
+};
 
 // Initialize SQLite database
 const fs = require('fs');
-if (!fs.existsSync('data')) {
-  fs.mkdirSync('data');
+const dbDir = path.dirname(config.databasePath);
+if (!fs.existsSync(dbDir)) {
+  fs.mkdirSync(dbDir);
 }
-const db = new Database('data/club_management.db');
+const db = new Database(config.databasePath);
 
 // Create tables if they don't exist
 db.exec(`
@@ -37,17 +51,20 @@ db.exec(`
   )
 `);
 
-console.log('Database initialized successfully');
+console.log(`Database initialized successfully (${config.databasePath})`);
 
 // Middleware
-app.use(cors());
-app.use(express.json());
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || '*',
+  credentials: true
+}));
+app.use(express.json({ limit: '10mb' }));
 app.use(express.static('public'));
 
 // Rate limiting
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
+  windowMs: config.rateLimit.windowMs,
+  max: config.rateLimit.max,
   message: 'Too many requests from this IP, please try again later.'
 });
 app.use(limiter);
@@ -56,9 +73,13 @@ app.use(limiter);
 const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
+    // Create user-friendly error message
+    const firstError = errors.array()[0];
+    const errorMessage = firstError.msg || 'Validation error';
+    
     return res.status(400).json({
       success: false,
-      message: 'Validation errors',
+      message: errorMessage,
       errors: errors.array()
     });
   }
@@ -99,7 +120,9 @@ app.get('/clubs', [
       data: clubs
     });
   } catch (error) {
-    console.error('Error fetching clubs:', error);
+    if (config.nodeEnv === 'development') {
+      console.error('Error fetching clubs:', error);
+    }
     res.status(500).json({
       success: false,
       message: 'Internal server error'
@@ -142,7 +165,9 @@ app.post('/clubs', [
       data: newClub
     });
   } catch (error) {
-    console.error('Error creating club:', error);
+    if (config.nodeEnv === 'development') {
+      console.error('Error creating club:', error);
+    }
     res.status(500).json({
       success: false,
       message: 'Internal server error'
@@ -198,7 +223,9 @@ app.post('/clubs/:id/events', [
       data: newEvent
     });
   } catch (error) {
-    console.error('Error creating event:', error);
+    if (config.nodeEnv === 'development') {
+      console.error('Error creating event:', error);
+    }
     res.status(500).json({
       success: false,
       message: 'Internal server error'
@@ -232,7 +259,9 @@ app.get('/clubs/:id/events', [
       }
     });
   } catch (error) {
-    console.error('Error fetching events:', error);
+    if (config.nodeEnv === 'development') {
+      console.error('Error fetching events:', error);
+    }
     res.status(500).json({
       success: false,
       message: 'Internal server error'
@@ -284,9 +313,11 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-  console.log(`Database: data/club_management.db`);
+app.listen(config.port, () => {
+  console.log(`Server running on http://localhost:${config.port}`);
+  console.log(`Environment: ${config.nodeEnv}`);
+  console.log(`Database: ${config.databasePath}`);
+  console.log(`Rate limiting: ${config.rateLimit.max} requests per ${config.rateLimit.windowMs / 1000 / 60} minutes`);
 });
 
 module.exports = app;
