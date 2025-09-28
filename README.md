@@ -77,6 +77,24 @@ npm start
 
 ## API Endpoints
 
+## Testing
+
+The tests are simple HTTP checks against a running server.
+
+1) Start the server in one terminal
+```bash
+npm start
+```
+
+2) In another terminal, run the tests
+```bash
+npm test
+```
+
+Notes:
+- Tests assume the server is available at http://localhost:3000
+- No separate test database is created; the tests are read/write and idempotent thanks to unique names
+
 ### Clubs
 - `GET /clubs` - Get all clubs (supports `?search=term`)
 - `POST /clubs` - Create a new club
@@ -96,7 +114,7 @@ curl -X POST http://localhost:3000/clubs \
 ```bash
 curl -X POST http://localhost:3000/clubs/1/events \
   -H "Content-Type: application/json" \
-  -d '{"title":"Tournament","scheduled_date":"2024-12-31T18:00:00.000Z"}'
+  -d '{"title":"Tournament","scheduled_date":"2030-12-31T18:00:00.000Z"}'
 ```
 
 ### Health Check
@@ -106,7 +124,7 @@ curl -X POST http://localhost:3000/clubs/1/events \
 
 - **Local Development**: Database stored in `data/club_management.db`
 - **Docker**: Database persisted in `./data/` directory (automatically created)
-- **Database Schema**: SQLite with clubs and events tables
+- **Database Schema**: SQLite with clubs and events tables (foreign keys enabled, indexes on `events.club_id` and `events.scheduled_date`)
 
 ## Field Requirements
 
@@ -123,12 +141,21 @@ curl -X POST http://localhost:3000/clubs/1/events \
 
 ### Project Structure
 ```
-├── server.js              # Express.js API server
-├── public/                 # Frontend files
-│   ├── index.html         # Web interface  
+├── server.js              # App entry; wires routes and middleware
+├── src/
+│   ├── config.js          # Env + app config
+│   ├── db.js              # DB init, schema, indexes, prepared statements
+│   ├── validators.js      # Validation chains + error handler
+│   └── routes/
+│       ├── clubs.js       # /clubs (GET, POST)
+│       └── events.js      # /clubs/:id/events (GET, POST)
+├── public/                # Frontend files
+│   ├── index.html         # Web interface
 │   └── app.js             # Frontend JavaScript
-├── data/                   # SQLite database directory
-├── package.json           # Node.js dependencies
+├── data/                  # SQLite database directory (persisted)
+├── test/
+│   └── api.test.js        # Basic API tests
+├── package.json           # Scripts and deps
 ├── Dockerfile             # Docker configuration
 └── docker-compose.yml     # Docker Compose setup
 ```
@@ -180,7 +207,7 @@ docker compose up --build
 
 **Database issues:**
 ```bash
-# Remove database to start fresh
+# Remove database to start fresh (local dev)
 rm -f data/club_management.db
 # Then restart the application
 ```
