@@ -36,6 +36,8 @@ The server will run on `http://localhost:3000`.
 docker-compose up --build
 ```
 
+The database will be persisted in the `./data/` directory.
+
 ## API Endpoints
 
 ### Clubs
@@ -109,15 +111,18 @@ CREATE TABLE events (
 npm run dev
 ```
 
+Both local development and Docker use the same database location (`data/club_management.db`).
+
 ## Project Structure
 
 ```
 ├── server.js              # Main Express application
 ├── public/                 # Static files (basic frontend placeholder)
+├── data/                   # Database directory
+│   └── club_management.db # SQLite database (auto-created)
 ├── package.json           # Dependencies and scripts
 ├── Dockerfile             # Docker configuration
-├── docker-compose.yml     # Docker Compose setup
-└── club_management.db     # SQLite database (auto-created)
+└── docker-compose.yml     # Docker Compose setup
 ```
 
 ## License
