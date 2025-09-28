@@ -128,7 +128,7 @@ function renderClubs(clubsData) {
             <div class="flex justify-between items-start mb-4">
                 <div>
                     <h3 class="text-lg font-semibold text-gray-900 mb-2">${escapeHtml(club.name)}</h3>
-                    <p class="text-gray-600 text-sm mb-3">${escapeHtml(club.description)}</p>
+                    ${club.description ? `<p class="text-gray-600 text-sm mb-3">${escapeHtml(club.description)}</p>` : '<p class="text-gray-400 text-sm mb-3 italic">No description provided</p>'}
                     <p class="text-xs text-gray-500">Created: ${formatDate(club.created_at)}</p>
                 </div>
             </div>
@@ -196,7 +196,7 @@ async function loadAndDisplayEvents(clubId) {
         eventsContent.innerHTML = events.map(event => `
             <div class="border-l-4 border-blue-500 pl-4 py-2 mb-3 last:mb-0">
                 <h4 class="font-medium text-gray-900 text-sm">${escapeHtml(event.title)}</h4>
-                <p class="text-gray-600 text-xs mt-1">${escapeHtml(event.description)}</p>
+                ${event.description ? `<p class="text-gray-600 text-xs mt-1">${escapeHtml(event.description)}</p>` : ''}
                 <p class="text-blue-600 text-xs mt-1 font-medium">${formatDate(event.scheduled_date)}</p>
             </div>
         `).join('');
