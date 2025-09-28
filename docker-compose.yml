@@ -1,0 +1,16 @@
+services:
+  app:
+    build: .
+    container_name: club-management-app
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    volumes:
+      # Persist SQLite database
+      - ./data:/app/data
+    restart: unless-stopped
+
+
+
