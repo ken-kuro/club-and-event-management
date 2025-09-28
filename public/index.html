@@ -4,58 +4,174 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Club & Event Management</title>
-    <style>
-        body {
-            font-family: system-ui, -apple-system, sans-serif;
-            line-height: 1.6;
-            margin: 0;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: white;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        h1 {
-            color: #333;
-            margin-bottom: 1rem;
-        }
-        .api-info {
-            background-color: #f8f9fa;
-            padding: 1rem;
-            border-radius: 4px;
-            margin: 1rem 0;
-        }
-        code {
-            background-color: #e9ecef;
-            padding: 2px 4px;
-            border-radius: 3px;
-            font-family: 'Monaco', 'Consolas', monospace;
-        }
-        .endpoint {
-            margin: 0.5rem 0;
-        }
-    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <div class="container">
-        <h1>Club & Event Management API</h1>
-        <p>Backend API server is running successfully.</p>
-        
-        <div class="api-info">
-            <h3>Available Endpoints</h3>
-            <div class="endpoint"><strong>GET</strong> <code>/clubs</code> - Get all clubs</div>
-            <div class="endpoint"><strong>POST</strong> <code>/clubs</code> - Create a new club</div>
-            <div class="endpoint"><strong>GET</strong> <code>/clubs/:id/events</code> - Get events for a club</div>
-            <div class="endpoint"><strong>POST</strong> <code>/clubs/:id/events</code> - Create an event</div>
-            <div class="endpoint"><strong>GET</strong> <code>/health</code> - Health check</div>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-6">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">Club Management</h1>
+                    <p class="text-gray-600">Manage clubs and schedule events</p>
+                </div>
+                <div class="flex space-x-4">
+                    <button id="newClubBtn" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                        New Club
+                    </button>
+                </div>
+            </div>
         </div>
-        
-        <p><em>TODO: Implement a real FE</em></p>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Search Bar -->
+        <div class="mb-8">
+            <div class="max-w-md">
+                <label for="search" class="sr-only">Search clubs</label>
+                <div class="relative">
+                    <input type="text" 
+                           id="searchInput" 
+                           placeholder="Search clubs..." 
+                           class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center">
+                        <svg class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loading" class="text-center py-12">
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <p class="mt-2 text-gray-600">Loading clubs...</p>
+        </div>
+
+        <!-- Clubs Grid -->
+        <div id="clubsContainer" class="hidden">
+            <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                <!-- Club cards will be inserted here -->
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="hidden text-center py-12">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14-7l2 2-2 2M5 11h14m-7-7l-2 2 2 2" />
+            </svg>
+            <h3 class="mt-2 text-sm font-medium text-gray-900">No clubs found</h3>
+            <p class="mt-1 text-sm text-gray-500">Get started by creating your first club.</p>
+        </div>
+    </main>
+
+    <!-- New Club Modal -->
+    <div id="clubModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-medium text-gray-900">Create New Club</h3>
+                </div>
+                <form id="clubForm" class="px-6 py-4">
+                    <div class="mb-4">
+                        <label for="clubName" class="block text-sm font-medium text-gray-700 mb-1">Club Name</label>
+                        <input type="text" 
+                               id="clubName" 
+                               name="name" 
+                               required 
+                               maxlength="100"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div class="mb-6">
+                        <label for="clubDescription" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                        <textarea id="clubDescription" 
+                                  name="description" 
+                                  required 
+                                  maxlength="500"
+                                  rows="3"
+                                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
+                    </div>
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" 
+                                id="cancelClubBtn" 
+                                class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors">
+                            Cancel
+                        </button>
+                        <button type="submit" 
+                                class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+                            Create Club
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
+
+    <!-- Event Modal -->
+    <div id="eventModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 id="eventModalTitle" class="text-lg font-medium text-gray-900">Schedule Event</h3>
+                </div>
+                <form id="eventForm" class="px-6 py-4">
+                    <input type="hidden" id="eventClubId">
+                    <div class="mb-4">
+                        <label for="eventTitle" class="block text-sm font-medium text-gray-700 mb-1">Event Title</label>
+                        <input type="text" 
+                               id="eventTitle" 
+                               name="title" 
+                               required 
+                               maxlength="100"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div class="mb-4">
+                        <label for="eventDescription" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                        <textarea id="eventDescription" 
+                                  name="description" 
+                                  required 
+                                  maxlength="500"
+                                  rows="3"
+                                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
+                    </div>
+                    <div class="mb-6">
+                        <label for="eventDate" class="block text-sm font-medium text-gray-700 mb-1">Date & Time</label>
+                        <input type="datetime-local" 
+                               id="eventDate" 
+                               name="scheduled_date" 
+                               required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" 
+                                id="cancelEventBtn" 
+                                class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors">
+                            Cancel
+                        </button>
+                        <button type="submit" 
+                                class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors">
+                            Schedule Event
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toast" class="fixed top-4 right-4 hidden z-50">
+        <div class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 max-w-sm">
+            <div class="flex items-center">
+                <div id="toastIcon" class="flex-shrink-0"></div>
+                <div class="ml-3">
+                    <p id="toastMessage" class="text-sm text-gray-900"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
 </body>
 </html>
