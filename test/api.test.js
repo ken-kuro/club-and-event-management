@@ -9,9 +9,8 @@ const { strictEqual, ok, deepStrictEqual } = require('assert');
 const fs = require('fs');
 const path = require('path');
 
-// Test configuration
+// Test configuration: assumes server already running at BASE_URL
 const BASE_URL = 'http://localhost:3000';
-const TEST_DB_PATH = 'test/test_db.db';
 
 // Test data
 const testClub = {
